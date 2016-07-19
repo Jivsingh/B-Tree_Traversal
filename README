@@ -1,0 +1,114 @@
+README
+
+Submitted by Jivtesh Singh Chhatwal (jsc2226) and Sanjana Gopisetty (ssg2147)
+
+Usage:
+Run the make file as:-
+make -f make
+
+Run the code as (example):-
+./build 32 6 3 4 4
+
+The included files should contain the files main.c, rand_func.h, p2random v2.c and make
+
+
+
+The code works in the following steps:-
+
+Step 1: Pre-processing and Initilization
+
+Based on the command line arguments and the given generate_sorted_unique function, unique 32 bit integers/keys are generated. In the same way, using generate function, the probes for testing the B-tree are generated.
+
+The following information is recorded to handle edge cases,
+
+branches, holds the fanout per level. 
+max_nodes, holds the maximum number of nodes per level.
+
+The maximum number of keys that can be stored in the index is calculated by adding the max_nodes[level] * branches[level]-1 i.e max_nodes * keys per node for every level. 
+
+For handling the edge cases,
+
+1) Too many build keys 
+	
+	If the command line input K > the maximum number of keys calculated, the keys entered are greater than the maximum allowable keys in the tree and error is reported.
+
+2) Too few build keys
+
+	If the command line input K < maximum number of keys / fanout[root], the root is empty and error is reported. 
+	
+
+
+
+Step 2: Building the tree
+
+The tree is built bottom up. The array 'filled' keeps count on the number of keys inserted so far per level and array 'gone_up' checks whether we reached the end of a node on a level and have already gone to its parent to fill in the key. If the parent node is already filled (or its parent node, we check this recursively), we can continue inserting keys at the leaf level itself. Index is a two-dimensional array which is the actual tree.
+
+Insertion starts from the last level of the tree (bottom up). For every key, if the number of keys filled in that level is divisble by the fanout of that level (we have reached the end of a node) and if goneup for the level is 0 i.e key cannot be inserted in that level, the key has to inserted in a level above and the goneup for that level is set to 1. The process is repeated recursively till all keys are inserted.
+
+The recursive function 'fill_up' in our code, handles the above process of building a tree index. 
+
+The unused nodes are all filled with MAXINT.
+
+
+
+
+Step 3: Searching and Range Identification 
+
+Searching for a probe in the tree, begins from the root. 
+
+Using binary search for the node under consideration at every level starting from the root till the leaf, we find which child node to look into for the key being searched in the following manner:-
+
+The child node number in the lower level array which contains the key range =  [(index of the match found by binary search in the upper level array) + (number of nodes before the node containing the match in the upper level array)]. This is then multiplied by the number of keys per node in the lower level array to obtain the offset of the child node containing the key range in the lower level array. Similarly, binary search is performed on this node and we move onto its child node.
+
+The same formula as above also gives the range_id for the probe being searched in the leaf array. This value is stored for each probe in the array 'outputs'.
+
+The function 'bin_Search' in our code, handles searching and range indentification. We take a special consideration for MAXINT during binary search as it gets repeated in the index. We always branch left whenever MAXINT is encountered to return the value of the lowest index containing MAXINT in a node.
+
+Finally, we print the <probe range_id> pairs to stdout.
+
+
+
+
+Some example runs of our code for custom as well as random values and also various tree structures are shown below. We also print out the tree obtained level-wise:-
+
+(Random values)
+[~/Documents/Traverse_Tree/Traverse_Tree]- $ ./build 32 6 3 4 4
+The keys generated = 
+-1995486465, -1762980204, -1746665873, -1642443726, -1456364038, -1410988110, -1277280239, -1249300976, -1144176837, -1016856645, -784658584, -416593811, -391927817, -343348353, -180926439, 37240658, 180314444, 450851449, 818697578, 1085196695, 1119125012, 1153267258, 1222273287, 1231057847, 1288808747, 1366459801, 1371278033, 1390551472, 1823109918, 1854407961, 1883168558, 2125108624, 
+
+Tree =
+37240658, 2125108624, 
+-1642443726, -1249300976, -416593811, 1085196695, 1231057847, 1390551472, 2147483647, 2147483647, 2147483647, 
+-1995486465, -1762980204, -1746665873, -1456364038, -1410988110, -1277280239, -1144176837, -1016856645, -784658584, -391927817, -343348353, -180926439, 180314444, 450851449, 818697578, 1119125012, 1153267258, 1222273287, 1288808747, 1366459801, 1371278033, 1823109918, 1854407961, 1883168558, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 
+
+The probes generated = 
+1231057847, -1410988110, 1371278033, 818697578, -1995486465, 180314444, 
+
+The probe - range_id array is:-
+1231057847 23
+-1410988110 5
+1371278033 26
+818697578 18
+-1995486465 0
+180314444 16
+
+
+
+(Custom values)
+[~/Documents/Traverse_Tree/Traverse_Tree]- $ ./build 10 1 5 2 2 
+The keys generated = 
+11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 
+
+Tree =
+44, 88, 2147483647, 2147483647, 
+22, 66, 110, 2147483647, 2147483647, 
+11, 33, 55, 77, 99, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 
+
+The probes generated = 
+56, 
+
+The probe - range_id array is:-
+56, 5
+
+
+(The actual code just prints the <probe range_id> pairs while the rest of the print statements have been commented out, as requested)

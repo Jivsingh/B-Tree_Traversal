@@ -1,0 +1,2 @@
+all:
+	gcc -O3 -flto -msse4.2 -msse4a -o build p2random\ v2.c SSE.c
